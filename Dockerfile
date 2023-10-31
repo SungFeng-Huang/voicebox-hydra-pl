@@ -1,4 +1,4 @@
-FROM nvcr.io/nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
+FROM nvcr.io/nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
 
 # RUN apt update && \
 #     apt install -y git vim tmux htop python3-dev python3-pip wget curl libgl1-mesa-glx rsync unzip build-essential python3-dev libopenblas-dev libopenexr-dev
@@ -31,18 +31,21 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 ENV PATH="/miniconda/bin:${PATH}"
 
 # 創建一個新的 conda 環境並安裝 Python 3.10
-RUN conda create -n voicebox python=3.10
+RUN conda create -n voicebox python=3.10 && \
+    echo ". /miniconda/etc/profile.d/conda.sh" >> /root/.zshrc && \
+    echo "conda activate voicebox" >> /root/.zshrc
 
 # 啟動新創建的 conda 環境
 # 在 conda 環境中安裝 PyTorch
-# SHELL ["conda", "run", "-n", "myenv", "/bin/zsh", "-c"]
 RUN . /miniconda/etc/profile.d/conda.sh && \
     conda activate voicebox && \
-    echo ". /miniconda/etc/profile.d/conda.sh" >> /root/.zshrc
+    pip install --no-cache-dir --upgrade pip && \
+    pip install voicebox-pytorch==0.4.0
 
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install voicebox-pytorch==0.4.0 && \
-    echo "conda activate voicebox" >> /root/.zshrc
+# # 安裝 pytorch 套件 （但會被覆蓋，所以先註解掉）
+# RUN pip install torch torchvision torchaudio
 
 # 確保當容器啟動時使用 zsh
-CMD ["/bin/zsh"]
+# SHELL ["/bin/zsh", "-c"]
+# SHELL ["conda", "run", "-n", "voicebox", "/bin/zsh", "-c"]
+CMD ["/bin/zsh", "-l", "-c", "conda activate voicebox && zsh"]
