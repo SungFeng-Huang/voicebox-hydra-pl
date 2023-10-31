@@ -41,6 +41,16 @@ RUN . /miniconda/etc/profile.d/conda.sh && \
     conda activate voicebox && \
     pip install --no-cache-dir --upgrade pip && \
     pip install voicebox-pytorch==0.4.0
+    
+RUN mkdir -p /workspaces/voicebox-hydra-pl
+
+WORKDIR /workspaces/voicebox-hydra-pl
+
+COPY . .
+    
+RUN . /miniconda/etc/profile.d/conda.sh && \
+    conda activate voicebox && \
+    pip install -r requirements.txt
 
 # # 安裝 pytorch 套件 （但會被覆蓋，所以先註解掉）
 # RUN pip install torch torchvision torchaudio

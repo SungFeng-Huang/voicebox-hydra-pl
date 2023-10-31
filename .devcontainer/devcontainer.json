@@ -9,13 +9,6 @@
 	// 	// Update the 'dockerFile' property if you aren't using the standard 'Dockerfile' filename.
 	// 	"dockerfile": "../Dockerfile"
 	// },
-	// "features": {
-	// 	"ghcr.io/devcontainers/features/common-utils:2": {},
-	// 	"ghcr.io/devcontainers/features/conda:1": {},
-	// 	"ghcr.io/devcontainers/features/python:1": {},
-	// 	"ghcr.io/devcontainers-contrib/features/pylint:2": {}
-	// },
-	"runArgs": ["--gpus", "all"]
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -27,8 +20,17 @@
 	// "postCreateCommand": "cat /etc/os-release",
 
 	// Configure tool-specific properties.
-	// "customizations": {},
+	"customizations": {
+		"terminal.integrated.shell.linux": "/bin/zsh",
+		"vscode": {
+			"extensions": [
+				"ms-python.python"
+			]
+		}
+	},
 
 	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "devcontainer"
+	"runArgs": ["--gpus", "all"]
+
 }
