@@ -12,6 +12,8 @@ RUN apt-get update && \
     wget \
     git \
     curl \
+    tmux \
+    htop \
     build-essential \
     zsh \
     && rm -rf /var/lib/apt/lists/*
