@@ -1,0 +1,46 @@
+_target_: src.models.voicebox_module.VoiceBoxLitModule
+
+optimizer:
+  _target_: torch.optim.Adam
+  _partial_: true
+  lr: 0.001
+  weight_decay: 0.0
+
+scheduler:
+  _target_: torch.optim.lr_scheduler.ReduceLROnPlateau
+  _partial_: true
+  mode: min
+  factor: 0.1
+  patience: 10
+
+net:
+  _target_: src.models.components.voicebox.ConditionalFlowMatcherWrapper
+  voicebox:
+    _target_: src.models.components.voicebox.VoiceBox
+    num_cond_tokens: null
+    audio_enc_dec: src.models.components.vocoder.MelVocoder # [MelVocoder, EncodecVocoder]
+    dim_in: null
+    dim_cond_emb: 1024
+    dim: 1024
+    depth: 24
+    dim_head: 64
+    heads: 16
+    ff_mult: 4
+    ff_dropout: 0.
+    time_hidden_dim: null
+    conv_pos_embed_kernel_size: 31
+    conv_pos_embed_groups: null
+    attn_dropout: 0
+    attn_flash: False
+    attn_qk_norm: True
+    num_register_tokens: 16
+    p_drop_prob: 0.3 # p_drop in paper
+    frac_lengths_mask: (0.7, 1.)
+    condition_on_text: True
+
+  # Either using T5 TextToSemantic or DurationPredictor for text/phoneme to audio alignment
+  text_to_semantic: null
+  duration_predictor: null
+
+# compile model for faster training with pytorch 2.0
+compile: false
