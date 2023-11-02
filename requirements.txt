@@ -24,5 +24,6 @@ pytest          # tests
 sh            # for running bash commands in some tests (linux/macos only)
 
 # --------- project --------- #
-speechbrain
+lhotse
+# speechbrain
 # voicebox-pytorch==0.4.0
