@@ -24,6 +24,7 @@ pytest          # tests
 sh            # for running bash commands in some tests (linux/macos only)
 
 # --------- project --------- #
-lhotse
+lhotse @ git+https://github.com/lhotse-speech/lhotse@master
+nemo_toolkit[all] @ git+https://github.com/pzelasko/NeMo.git@feature/lhotse-integration
 # speechbrain
 # voicebox-pytorch==0.4.0
