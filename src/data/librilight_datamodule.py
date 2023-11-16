@@ -101,8 +101,8 @@ class LibriLightDataModule(LightningDataModule):
         Do not use it to assign state (self.x = y).
         """
         # prepare_librilight(self.hparams.data_dir, "data/LibriLight/")
+        os.makedirs("data/LibriHeavy", exist_ok=True)
         for subset in ['small', 'medium', 'large', 'dev', 'test_clean', 'test_other', 'test_clean_large', 'test_other_large']:
-            os.makedirs("data/LibriHeavy", exist_ok=True)
             if not os.path.exists(f"data/LibriHeavy/libriheavy_cuts_${subset}.jsonl.gz"):
                 os.system(f"log \"Downloading {subset} subset.\"")
                 os.system(f"wget -P data/LibriHeavy -c https://huggingface.co/datasets/pkufool/libriheavy/resolve/main/libriheavy_cuts_{subset}.jsonl.gz")
