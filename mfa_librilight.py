@@ -40,8 +40,6 @@ def save_text_and_audio(cut: Cut, storage_path, t_id, **kwargs):
         f.write(text)
 
     if not os.path.exists(f"{storage_subdir}/{f_id}.wav"):
-        assert old_prefix is not None
-        assert new_prefix is not None
         cut.save_audio(
             storage_path=f"{storage_subdir}/{f_id}.wav",
             **kwargs
@@ -128,6 +126,7 @@ def save_texts_and_audios(
             tqdm,
             desc="Storing text transcripts (chunks progress)",
             total=len(futures),
+            position=1,
         )
 
     cuts = combine(progress(f.result() for f in futures))
@@ -136,7 +135,7 @@ def save_texts_and_audios(
 
 from textgrid import TextGrid, IntervalTier, PointTier, Interval, Point
 
-def cut_to_interval(cut, t_id=0):
+def cut_to_interval_tier(cut, t_id=0):
     cut_st = cut.start
     cut_ed = cut_st + cut.duration
     assert len(cut.supervisions) == 1
@@ -146,7 +145,15 @@ def cut_to_interval(cut, t_id=0):
     sup_ed = sup_st + sup.duration
     assert cut_ed >= sup_ed
 
-    tier = Interval(
+    cut_id = cut.id
+    spk_id = cut.id.split('/')[1]
+    # TODO: change name into cut.id, pre-pad fixed-length spk_id for MFA
+    tier = IntervalTier(
+        name=cut_id,
+        minTime=cut_st,
+        maxTime=cut_ed,
+    )
+    tier.add(
         minTime=sup_st,
         maxTime=sup_ed,
         mark=sup.custom["texts"][t_id],
@@ -165,24 +172,20 @@ def save_rec_audio_and_textgrid(
     rec, cut_ids = recs[rec_id], rec_to_cuts[rec_id]
     rec_cuts = cuts.subset(cut_ids=cut_ids)
     tg = TextGrid(name=rec.id, minTime=0, maxTime=rec.duration)
-    tiers = {}
     for rec_cut in rec_cuts:
-        spk_id = rec_cut.id.split('/')[1]
-        if spk_id not in tiers:
-            # TODO: change name into cut.id, pre-pad fixed-length spk_id for MFA
-            tiers[spk_id] = IntervalTier(name=spk_id)
-            tiers[spk_id].strict = False
-        interval = cut_to_interval(cut=rec_cut, t_id=t_id)
-        interval.strict = False
-        tiers[spk_id].addInterval(interval)
-    for tier in tiers.values():
+        tier = cut_to_interval_tier(cut=rec_cut, t_id=t_id)
         tg.append(tier)
 
+    cut_id = rec_id
+    spk_id = rec_id.split('/')[1]
+    # TODO: change name into cut.id, pre-pad fixed-length spk_id for MFA
     f_id = ','.join(rec.id.split('/'))
-    tg.write(f"{storage_path}/{f_id}.TextGrid")
+    tg.write(f"{storage_path}/{spk_id:0>6},{f_id}.TextGrid")
 
     audio_src = rec.sources[0].source
-    audio_dst = f"{storage_path}/{f_id}.flac"
+    audio_dst = f"{storage_path}/{spk_id:0>6},{f_id}.flac"
+    os.symlink(audio_src, audio_dst)
+    # audio_dst = f"{storage_path}/{f_id}.wav"
     # os.system(f"ffmpeg -i {audio_src} {audio_dst}")
 
     return tg
@@ -315,8 +318,10 @@ if __name__ == "__main__":
     old_prefix="download/librilight"
     new_prefix="/datasets/LibriLight"
 
-    subsets = ["dev", "test_clean", "test_other"]
+    # subsets = ["dev", "test_clean", "test_other"]
     # subsets = ["small"]
+    subsets = ["medium"]
+    # subsets = ["large", "test_clean_large", "tesst_other_large"]
 
     for subset in subsets:
         # can not lazily split with progress bar
@@ -324,13 +329,12 @@ if __name__ == "__main__":
         cuts = cuts.filter(lambda c: ',' not in c.id)
         cuts = cuts.map(partial(change_prefix, old_prefix=old_prefix, new_prefix=new_prefix))
 
+        output_path = f"{new_prefix}/mfa_data"
+        storage_path=f"{output_path}/{subset}"
+        cuts = cuts.to_eager()
+        save_texts_and_audios(cuts=cuts, storage_path=storage_path, num_jobs=32)
         # if subset in ["dev", "test_clean", "test_other"]:
-        #     output_path = f"{new_prefix}/mfa_data"
+        #     output_path = f"{new_prefix}/mfa_tg_data"
         #     storage_path=f"{output_path}/{subset}"
-        #     cuts = cuts.to_eager()
-        #     save_texts_and_audios(cuts=cuts, storage_path=storage_path, num_jobs=32)
-        if subset in ["dev", "test_clean", "test_other"]:
-            output_path = f"{new_prefix}/mfa_tg_data"
-            storage_path=f"{output_path}/{subset}"
-            save_audios_and_textgrids(cuts=cuts, storage_path=storage_path, num_jobs=32)
+        #     save_audios_and_textgrids(cuts=cuts, storage_path=storage_path, num_jobs=32)
         
